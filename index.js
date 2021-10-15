@@ -4,6 +4,10 @@ function determinePath(request) {
   return urlArray.length > 3 ? urlArray.slice(3).join("/") : "";
 }
 
+function determineIp(request) {
+  return request.headers.get("x-forwarderd-for");
+}
+
 function handleGet(path) {
   return new Response(getHtml(path), {
     status: 200,
@@ -11,20 +15,21 @@ function handleGet(path) {
   });
 }
 
-function getHtml(path) {
+function getHtml(path, ip) {
   return `
-<div style="display: flex; justify-content: center; align-items: center;">
+<div>
     <h1>Welcome to ${path}</h1>
-    <p>Nothing to see here</p>
-  </div>
+    <p>Your IP is ${ip || "unknown"}</p>
+ </div>
 `
 }
 
 addEventListener("fetch", (event) => {
   const {request} = event;
   const path = determinePath(request);
+  const ip = determineIp(request);
   if (request.method === "GET") {
-    return event.respondWith(handleGet(path));
+    return event.respondWith(handleGet(path, ip));
   }
   event.respondWith(
     new Response("Get failed", {status: 500, headers: {"content-type": "text/plain"}})
